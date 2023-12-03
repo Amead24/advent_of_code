@@ -29,13 +29,14 @@ func main() {
 		line := scanner.Text()
 
 		// Regular expressions to find numbers or number words
-		reFirst := regexp.MustCompile(`(one|two|three|four|five|six|seven|eight|nine|\d)`)
-		reSecond := regexp.MustCompile(`(eno|owt|eerht|ruof|evif|xis|neves|thgie|enin|\d)`)
+		reFirst := regexp.MustCompile(`(\d)`)
+		reSecond := regexp.MustCompile(`(\d)`)
 
 		firstStr := reFirst.FindString(line)
 		secondStr := reSecond.FindString(reverseString(line))
 
-		first, second := getNumber(firstStr, words), getNumber(secondStr, words)
+		first := getNumber(firstStr, words)
+		second := getNumber(secondStr, words)
 
 		sum += (first * 10) + second
 		fmt.Printf("line=%s; first=%d; second=%d; sum=%d;\n", line, first, second, sum)
