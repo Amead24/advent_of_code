@@ -19,4 +19,6 @@ Making use of [this gha](https://github.com/k2bd/advent-readme-stars) to automat
 | [Day 4](https://adventofcode.com/2023/day/4) | ⭐ | ⭐ |
 | [Day 5](https://adventofcode.com/2023/day/5) | ⭐ | ⭐ |
 | [Day 6](https://adventofcode.com/2023/day/6) | ⭐ | ⭐ |
+| [Day 7](https://adventofcode.com/2023/day/7) | ⭐ |   |
+| [Day 9](https://adventofcode.com/2023/day/9) | ⭐ | ⭐ |
 <!--- advent_readme_stars table --->
