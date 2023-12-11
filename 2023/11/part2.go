@@ -102,24 +102,27 @@ func main() {
 	for i := 0; i < len(galaxies); i++ {
 		for ii := i + 1; ii < len(galaxies); ii++ {
 			dist := 0
+			// galaxies are always sorted by X asc due to detecion loop
+			// so I always know i'm in the same row or "going down"
 			for x := galaxies[i].x; x < galaxies[ii].x; x++ {
 				dist += 1
 				if universe[x][galaxies[i].y] == '@' {
-					dist += 9
+					dist += 999998
 				}
-				fmt.Printf("Walking Down: (%d, %d) => %d\n", x, galaxies[i].y, dist)
+				// fmt.Printf("Walking Down: (%d, %d) => %d\n", x, galaxies[i].y, dist)
 			}
 
-			for y := min(galaxies[i].y, galaxies[ii].y); y <= max(galaxies[i].y, galaxies[ii].y); y++ {
+			for y := min(galaxies[i].y, galaxies[ii].y); y < max(galaxies[i].y, galaxies[ii].y); y++ {
 				dist += 1
 				if universe[galaxies[ii].x][y] == '@' {
-					dist += 9
+					dist += 999998
 				}
-				fmt.Printf("Walking Left/Right: (%d, %d) => %d\n", galaxies[ii].x, y, dist)
+				// fmt.Printf("Walking Left/Right: (%d, %d) => %d\n", galaxies[ii].x, y, dist)
 			}
 
 			sum += dist
-			// 717879164676 -- too high
+			//      82,000,210 -- too low
+			// 717,879,164,676 -- too high
 			counter++
 			fmt.Printf("C[%d] - Distance: %v <=> %v = %d; Running Sum: %d\n", counter, galaxies[i], galaxies[ii], dist, sum)
 		}
