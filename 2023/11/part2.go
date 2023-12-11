@@ -122,6 +122,7 @@ func main() {
 
 			sum += dist
 			//      82,000,210 -- too low
+			// 717,878,258,016
 			// 717,879,164,676 -- too high
 			counter++
 			fmt.Printf("C[%d] - Distance: %v <=> %v = %d; Running Sum: %d\n", counter, galaxies[i], galaxies[ii], dist, sum)
