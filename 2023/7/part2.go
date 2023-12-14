@@ -156,6 +156,7 @@ func main() {
 		fmt.Printf("card: %s, type: %s, index: %d, bid: %d, sum: %d\n", combinedCards[i].card, combinedCards[i].cType, i, combinedCards[i].bid, sum)
 	}
 
+	// 251,115,489 --- xxxx
 	// 251,123,159 -- too high
 	// 250,569,264 -- too low
 	fmt.Printf("Sum: %d", sum)
