@@ -12,6 +12,21 @@ import (
 	"strings"
 )
 
+func copyTemplateFile(srcPath, destPath string) {
+	// Read content from the source file
+	content, err := ioutil.ReadFile(srcPath)
+	if err != nil {
+		log.Fatalf("Error reading file %s: %v", srcPath, err)
+	}
+
+	// Write content to the destination file
+	err = ioutil.WriteFile(destPath, content, 0644)
+	if err != nil {
+		log.Fatalf("Error writing file %s: %v", destPath, err)
+	}
+	log.Println("Copied content to:", destPath)
+}
+
 func main() {
 	year := flag.Int("year", 2023, "Year of the Advent of Code")
 	day := flag.Int("day", 1, "Day of the Advent of Code")
@@ -69,24 +84,15 @@ func main() {
 	inputURL := fmt.Sprintf("https://adventofcode.com/%d/day/%d/input", *year, *day)
 	makeRequestAndSave(inputURL, "input.txt")
 
-	// Basic template for main.go
-	mainGoContent := []byte("package main\n\nfunc main() {\n\t// Your code here\n}\n")
+	// Paths to template files
+	mainGoTemplatePath := "aoc/templates/main.go.txt"
+	mainTestGoTemplatePath := "aoc/templates/main_test.go.txt"
 
-	// Write the basic main.go template to file
-	part1GoFilename := filepath.Join(dirPath, "part1.go")
-	err = ioutil.WriteFile(part1GoFilename, mainGoContent, 0644)
-	if err != nil {
-		log.Fatal("Error writing main.go to file:", err)
-	}
-	log.Println("Saved content to:", part1GoFilename)
+	mainGoFilename := filepath.Join(dirPath, "main.go")
+	copyTemplateFile(mainGoTemplatePath, mainGoFilename)
 
-	part2GoFilename := filepath.Join(dirPath, "part2.go")
-	err = ioutil.WriteFile(part2GoFilename, mainGoContent, 0644)
-	if err != nil {
-		log.Fatal("Error writing main.go to file:", err)
-	}
-	log.Println("Saved content to:", part2GoFilename)
-
+	mainTestGoFilename := filepath.Join(dirPath, "main_test.go")
+	copyTemplateFile(mainTestGoTemplatePath, mainTestGoFilename)
 }
 
 // parseAndSaveDescription parses the HTML file to extract the challenge description from the <main> tag
