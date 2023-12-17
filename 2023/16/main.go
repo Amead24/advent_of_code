@@ -12,12 +12,19 @@ type Coord struct {
 	tile rune
 }
 
-func walk(previous, now Coord, tile rune) Coord {
-	next := Coord{now.row, now.col, now.tile}
-	// how to handle the operation?
+func walk(previous Coord, row, col int, contraption [][]rune) int {
+	if col < 0 || col >= len(contraption[0]) || row < 0 || row >= len(contraption) {
+		return 0
+	}
+
+	energizedTiles := 0
+	now := Coord{row, col, contraption[row][col]}
+	next := now
+
 	if previous.col > now.col { // left to right
 		if now.tile == '|' {
-			queue.append(now) // split ?
+			energizedTiles += walk(now, row-1, col, contraption)
+			energizedTiles += walk(now, row+1, col, contraption)
 		} else if now.tile == '/' { // bend up
 			next.row--
 		} else if now.tile == '\\' { // bend down
@@ -56,7 +63,7 @@ func walk(previous, now Coord, tile rune) Coord {
 			next.row++
 		}
 	}
-	next.tile = maze[next.row][next.col]
+
 	return next
 }
 
