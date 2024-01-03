@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -28,7 +29,7 @@ func (digger *Digger) Move(direction string, depth int) {
 
 func p1ProcessLines(lines []string) (int, error) {
 	area := 0
-	steps := 1
+	steps := 0
 	digger := &Digger{vertical: 0, horizontal: 0}
 
 	for _, line := range lines {
@@ -47,7 +48,7 @@ func p1ProcessLines(lines []string) (int, error) {
 
 		area += (previousLocation.vertical*digger.horizontal - previousLocation.horizontal*digger.vertical) + iDepth
 		// fmt.Printf("Area: %d\n", area)
-		steps += 1
+		steps += iDepth
 	}
 
 	// This took me a while to figure out, but this was really helpful: https://advent-of-code.xavd.id/writeups/2023/day/18/
@@ -61,7 +62,36 @@ func p1ProcessLines(lines []string) (int, error) {
 }
 
 func p2ProcessLines(lines []string) (int, error) {
-	return 0, nil
+	area := 0
+	// steps := 0
+	digger := &Digger{vertical: 0, horizontal: 0}
+
+	dirs := map[string]string{
+		"0": "R",
+		"1": "D",
+		"2": "L",
+		"3": "U",
+	}
+
+	for _, line := range lines {
+		reInstructions := regexp.MustCompile(`#(\w{5})(\d)`)
+		things := reInstructions.FindStringSubmatch(line)
+		strHex, direction := things[1], things[2]
+
+		hex, _ := strconv.ParseInt(strHex, 16, 64)
+
+		previousLocation := &Digger{vertical: digger.vertical, horizontal: digger.horizontal}
+		// fmt.Printf("Previous Location (%d, %d)\n", previousLocation.vertical, previousLocation.horizontal)
+
+		digger.Move(dirs[direction], int(hex))
+		// fmt.Printf("Location (%d, %d)\n", digger.vertical, digger.horizontal)
+
+		area += (previousLocation.vertical*digger.horizontal - previousLocation.horizontal*digger.vertical) + int(hex)
+		// fmt.Printf("Area: %d\n", area)
+		// steps += iDepth
+	}
+
+	return (area / 2) + 1, nil
 }
 
 func main() {
