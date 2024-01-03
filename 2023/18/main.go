@@ -46,19 +46,28 @@ func p1ProcessLines(lines []string) (int, error) {
 		digger.Move(direction, iDepth)
 		// fmt.Printf("Location (%d, %d)\n", digger.vertical, digger.horizontal)
 
-		area += (previousLocation.vertical*digger.horizontal - previousLocation.horizontal*digger.vertical) + iDepth
+		area += (previousLocation.vertical*digger.horizontal - previousLocation.horizontal*digger.vertical) // + iDepth
 		// fmt.Printf("Area: %d\n", area)
+
 		steps += iDepth
 	}
 
-	// This took me a while to figure out, but this was really helpful: https://advent-of-code.xavd.id/writeups/2023/day/18/
-	// The key here is to realize that the "area" of the shape after shoelace isn't including the space of the perimeter.
-	// return (area / 2) + (steps / 2) - 1, nil
+	// This is the best explanation for area vs. what we're doing here
+	// https://www.reddit.com/r/adventofcode/comments/18lg2we/comment/kdyomrm/?utm_source=share&utm_medium=web2x&context=3
+	// Think of what we drew as a single 2D line.  However the digger is actually creating a 1m cube
+	// at each dot that we need to keep in mind, and then hollowing out all the insides.
+	// Once we enter this 3D space, we need to add 0.5m to the outside of the perimeter to get the full boundry.
+	// The edge case comes in the corners, given we're always doing a square/polygon - You get 4 convex corners (3/4 tile each).
+	// But because we're only adding 2/4 for each line, you get 1/4 left over x 4 corners - You need to add one more.
+	// return (area / 2) + 1, nil
 
-	// No idea why this works with changes on line 48
-	// https://github.com/bsadia/aoc_goLang/blob/53ed198e644324d559a366a17c712e1b8c6bb4fe/day18/main.go
-	// Note: Shoelace is only for 2D space.  So we're not finding area - We're finding VOLUME
-	return (area / 2) + 1, nil
+	// Put another way: Picks relates  A, I, and B with the formula A = I + B/2 - 1
+	// We know A with Shoelace and B is the number of steps/perimeter.  Solving for I gives: I = A - B/2 + 1
+	i := (area / 2) - (steps / 2) + 1
+
+	// But the question is actually asking for: I + B
+	// that is the number of points inside the perimeter + the number of points on the perimeter
+	return i + steps, nil
 }
 
 func p2ProcessLines(lines []string) (int, error) {
