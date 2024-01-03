@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math"
 	"os"
-	"sort"
 	"strings"
 )
 
@@ -86,9 +86,9 @@ func readLines() []string {
 }
 
 func main() {
-	// Your code here
 	lines := readLines()
 
+	// finding the starting position and creating the board
 	var start Coordinates
 	maze := make([][]string, len(lines))
 	for i, line := range lines {
@@ -98,73 +98,50 @@ func main() {
 				start = Coordinates{
 					i:    i,
 					ii:   ii,
-					pipe: "7", // puzzle "|"
+					pipe: "|", // puzzle "|", test "7"
 				}
 			}
 		}
-		// fmt.Printf("newLine: %v", newLine)
 	}
-	// fmt.Printf("Staring at: %v\n", start)
+	fmt.Printf("start: %v\n", start)
 
-	bounds := make(map[int][]int)
-	bounds[start.i] = []int{start.ii}
-
-	maze[start.i][start.ii] = "P"
+	area := 0  // for shoelace
+	steps := 0 // for picks
 
 	// cant figure out a boostrapping method - doing it manually
 	previous := start
-	next := Coordinates{i: 0, ii: 3, pipe: "F"} // 37, 55, "|"
-	for !Equal(start, next) {
-		maze[next.i][next.ii] = "P"
+	next := Coordinates{i: 37, ii: 55, pipe: "|"} // 37, 55, "|" = 0, 3, "F"
 
-		if seen, keyExists := bounds[next.i]; keyExists {
-			seen = append(seen, next.ii)
-			bounds[next.i] = seen // go returns a copy with maps?!
-		} else {
-			bounds[next.i] = []int{next.ii}
-		}
+	// now we walk the maze
+	for !Equal(start, next) {
+		fmt.Printf("Walking... %v\n", next)
+
+		// if slices.Contains([]string{"F", "J", "L", "7"}, maze[next.i][next.ii]) {
+		// 	area += next.i*previous.ii - next.ii*previous.i
+		// }
+		area += next.i*previous.ii - next.ii*previous.i
 
 		// fmt.Printf("%v, seen: %v\n", next, bounds)
 		tmp := findNext(previous, next, maze)
+
 		previous = next
 		next = tmp
+
+		steps++
 	}
 
-	sum := 0
-	for row, seen := range bounds {
-		// sorting the x coords "left to right" so that you can identify gaps
-		sort.Ints(seen)
+	// one last stop to make it back to the start
+	area += next.i*previous.ii - next.ii*previous.i
 
-		// if len(seen) % 2 != 0 - idk
-		// else - use this method??
-		// https://en.wikipedia.org/wiki/Point_in_polygon
+	// picks theorum - see notes on day 18, solved for I
+	// I = A - B/2 - 1
 
-		// no change for len(seen) to be one => Sum(Xodd - Xeven)
-		for i := len(seen) - 1; i > 0; i-- {
-			gap := seen[i] - seen[i-1] - 1
-			if (gap > 1) && (i%2 == 0) {
-				sum += gap
-				fmt.Printf("Row[%d] Gap between: %d & %d; Sum: %d\n", row, seen[i], seen[i-1], sum)
-			}
-		}
-		fmt.Printf("Row[%d] Seen: %d => Sum: %d\n", row, seen, sum)
-	}
+	// First we need to find area => shoelace
+	fmt.Printf("Area: %d, Steps: %d\n", area, steps)
+	interiorPoints := int((math.Abs(float64(area)) / 2.0) - (float64(steps) / 2.0) + 1.0)
 
-	// gravity?
-	// for i := len(maze) - 2; i > 0; i-- {
-	// 	for ii, c := range maze[i-1] {
-	// 		if (c == "P" || c == "I") && maze[i][ii] != "P" {
-	// 			maze[i][ii] = "I"
-	// 			sum++
-	// 		}
-	// 	}
-	// }
-
-	for i := 0; i < len(maze); i++ {
-		fmt.Printf("%v\n", maze[i])
-	}
 	// 1000 -- too high
 	// 566 -- ??
 	// 595 - right for someone else?!
-	fmt.Printf("Total Sum: %d\n", sum)
+	fmt.Printf("Total Interior: %d\n", interiorPoints)
 }
