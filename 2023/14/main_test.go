@@ -5,9 +5,20 @@ import (
 )
 
 func TestP1ProcessLines(t *testing.T) {
-	testRows := []string{}
+	testRows := []string{
+		"O....#....",
+		"O.OO#....#",
+		".....##...",
+		"OO.#O....O",
+		".O.....O#.",
+		"O.#..O.#.#",
+		"..O..#O..O",
+		".......O..",
+		"#....###..",
+		"#OO..#....",
+	}
 
-	want := 405
+	want := 136
 	got, err := p1ProcessLines(testRows)
 	if err != nil {
 		t.Errorf("processLines() error = %v", err)
