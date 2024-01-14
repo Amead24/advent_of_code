@@ -28,3 +28,28 @@ func TestP1ProcessLines(t *testing.T) {
 		t.Errorf("processLines() = %v, want %v", got, want)
 	}
 }
+
+func TestP2ProcessLines(t *testing.T) {
+	testRows := []string{
+		"O....#....",
+		"O.OO#....#",
+		".....##...",
+		"OO.#O....O",
+		".O.....O#.",
+		"O.#..O.#.#",
+		"..O..#O..O",
+		".......O..",
+		"#....###..",
+		"#OO..#....",
+	}
+
+	want := 64
+	got, err := p2ProcessLines(testRows)
+	if err != nil {
+		t.Errorf("processLines() error = %v", err)
+		return
+	}
+	if got != want {
+		t.Errorf("processLines() = %v, want %v", got, want)
+	}
+}

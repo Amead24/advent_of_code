@@ -15,7 +15,7 @@ func p2ProcessLines(lines []string) (int, error) {
 }
 
 func main() {
-	lines := aoc.ReadLines("")
+	lines := aoc.ReadLines("./input.txt")
 
 	sum, err := p1ProcessLines(lines)
 	if err != nil {
