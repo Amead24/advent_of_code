@@ -13,12 +13,6 @@ type Node struct {
 	R string
 }
 
-type P2Node struct {
-	V string
-	L string
-	R string
-}
-
 func p1ProcessLines(lines []string) (int, error) {
 	nodes := make(map[string]Node)
 	for _, line := range lines[2:] {
@@ -51,9 +45,34 @@ func p1ProcessLines(lines []string) (int, error) {
 	return counter, nil
 }
 
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
+}
+
+func lcm(a, b int) int {
+	return a / gcd(a, b) * b
+}
+
+func walk(nodes map[string]Node, steps []string, start string) int {
+	counter := 0
+	for !strings.HasSuffix(start, "Z") {
+		switch steps[counter%len(steps)] {
+		case "L":
+			start = nodes[start].L
+		case "R":
+			start = nodes[start].R
+		}
+		counter++
+	}
+	return counter
+}
+
 func p2ProcessLines(lines []string) (int, error) {
 	nodes := make(map[string]Node)
-	starting_nodes := []P2Node{}
+	starting_nodes := []string{}
 	for _, line := range lines[2:] {
 		reNode := regexp.MustCompile(`^([A-Z0-9]{3}) = \(([A-Z0-9]{3}), ([A-Z0-9]{3})\)$`)
 		matches := reNode.FindStringSubmatch(line)
@@ -61,44 +80,32 @@ func p2ProcessLines(lines []string) (int, error) {
 			panic(fmt.Sprintf("mismatch on %s w/ %v\n", line, matches))
 		}
 
-		if matches[1][2] == 'A' {
+		new_node := Node{matches[2], matches[3]}
+		if strings.HasSuffix(matches[1], "A") {
 			// fmt.Printf("match: %v\n", matches[1])
-			starting_nodes = append(starting_nodes, P2Node{matches[1], matches[2], matches[3]})
+			starting_nodes = append(starting_nodes, matches[1])
 		}
-		nodes[matches[1]] = Node{matches[2], matches[3]}
+
+		nodes[matches[1]] = new_node
 	}
 
-	counter := 0
+	results := []int{}
 	steps := strings.SplitAfter(lines[0], "")
-outer:
-	for {
-		arrived := true
-		for i := 0; i < len(starting_nodes); i++ {
-			if starting_nodes[i].V[2] != 'Z' {
-				arrived = false
-			}
-
-			// else we need to move each node forward
-			switch steps[counter%len(steps)] {
-			case "L":
-				// fmt.Printf("Step: L")
-				starting_nodes[i] = P2Node{starting_nodes[i].L, nodes[starting_nodes[i].L].L, nodes[starting_nodes[i].L].R}
-			case "R":
-				// fmt.Printf("Step: R")
-				starting_nodes[i] = P2Node{starting_nodes[i].R, nodes[starting_nodes[i].R].L, nodes[starting_nodes[i].R].R}
-			}
-
-			// fmt.Printf("Moving SN: %v\n", starting_nodes)
-		}
-
-		if arrived {
-			break outer
-		}
-
-		counter++
+	for _, start := range starting_nodes {
+		results = append(results, walk(nodes, steps, start))
 	}
 
-	return counter, nil
+	fmt.Printf("sn: %v\n", starting_nodes)
+	fmt.Printf("results: %v\n", results)
+
+	// sn: [BGA SLA PTA AAA XJA JNA]
+	// results: [18961 12169 17263 13301 14999 16697]
+	val := results[0]
+	for i := 1; i < len(results); i++ {
+		val = lcm(val, results[i])
+	}
+
+	return val, nil
 }
 
 func main() {
