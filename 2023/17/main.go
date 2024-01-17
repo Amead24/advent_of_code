@@ -81,10 +81,12 @@ func p1ProcessLines(lines []string) (int, error) {
 		current := frontier[0]  // pop off first element
 		frontier = frontier[1:] // remove first element
 		for _, next := range graph.neighors(current) {
+
 			// if _, alreadySeen := seen[next]; !alreadySeen {
 			// 	frontier = append(frontier, next)
 			// 	seen[next] = true
 			// }
+
 			if _, alreadySeen := cameFrom[next]; !alreadySeen {
 				frontier = append(frontier, next)
 				cameFrom[next] = current

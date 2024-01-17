@@ -47,3 +47,24 @@ func TestP1ProcessLines(t *testing.T) {
 		}
 	}
 }
+
+func TestP2ProcessLines(t *testing.T) {
+	testCases := []struct {
+		input []string
+		want  int
+	}{
+		{[]string{"???.### 1,1,3"}, 1},
+		{[]string{".??..??...?##. 1,1,3"}, 16384},
+		{[]string{"?#?#?#?#?#?#?#? 1,3,1,6"}, 1},
+		{[]string{"????.#...#... 4,1,1"}, 16},
+		{[]string{"????.######..#####. 1,6,5"}, 2500},
+		{[]string{"?###???????? 3,2,1"}, 506250},
+	}
+
+	for _, tc := range testCases {
+		got, _ := p2ProcessLines(tc.input)
+		if got != tc.want {
+			t.Errorf("p1() = %d; want %d", got, tc.want)
+		}
+	}
+}

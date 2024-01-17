@@ -3,74 +3,161 @@ package main
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/amead24/advent_of_code/aoc"
 )
 
 func isValidArrangement(str string, arrangements []int) bool {
 	count, arrCounter := 0, 0
-	wasContinuous := false
+
 	for i := 0; i < len(str); i++ {
 		if str[i] == '#' {
-			if arrCounter == len(arrangements) {
-				// the assumption for no more '.'s was wrong
-				fmt.Println("ass")
-				return false
-			}
-
-			wasContinuous = true
 			count++
-			if count > arrangements[arrCounter] {
-				fmt.Println("count")
-				return false
+		} else {
+			if count > 0 {
+				if arrCounter >= len(arrangements) || count != arrangements[arrCounter] {
+					return false
+				}
+				arrCounter++
+				count = 0
 			}
-		} else if wasContinuous { // first break after continuous
-			arrCounter++
-			if arrCounter > len(arrangements) {
-				fmt.Println("arr")
-				// we've gone to far - abort
-				// note: len() - 1, would abort early if there was only ...'s left
-				return false
-			}
-
-			// otherwise reset all the counters
-			count = 0
-			wasContinuous = false
 		}
-		// fmt.Printf("idk: %d, %d, %v\n", count, arrCounter, arrangements)
 	}
 
-	return true
+	if count > 0 {
+		if arrCounter >= len(arrangements) || count != arrangements[arrCounter] {
+			return false
+		}
+		arrCounter++
+	}
+
+	return arrCounter == len(arrangements)
 }
+
+type Stack struct {
+	items []string
+}
+
+func (s *Stack) pop() string {
+	if len(s.items) == 0 {
+		return "" // Handle underflow
+	}
+	index := len(s.items) - 1
+	item := s.items[index]
+	s.items = s.items[:index]
+	return item
+}
+
+func (s *Stack) push(item string) {
+	s.items = append(s.items, item)
+}
+
+func (s *Stack) empty() bool {
+	return len(s.items) == 0
+}
+
+// func p1ProcessLines(lines []string) (int, error) {
+// 	sum := 0
+
+// 	for _, line := range lines {
+// 		splitLine := strings.Split(line, " ")
+
+// 		possibilities := []string{}
+
+// 		stack := Stack{}
+// 		stack.push(splitLine[0])
+// 		for !stack.empty() {
+// 			springs := stack.pop()
+// 			if !strings.Contains(springs, "?") {
+// 				possibilities = append(possibilities, springs)
+// 			} else {
+// 				stack.push(strings.Replace(springs, "?", ".", 1))
+// 				stack.push(strings.Replace(springs, "?", "#", 1))
+// 			}
+// 		}
+
+// 		fmt.Printf("len(possibilities): %v\n", len(possibilities))
+
+// 		arrangements := aoc.MapInt(strings.Split(splitLine[1], ","))
+// 		for i := range possibilities {
+// 			if isValidArrangement(possibilities[i], arrangements) {
+// 				sum++
+// 			}
+// 		}
+// 	}
+
+// 	return sum, nil
+// }
 
 func p1ProcessLines(lines []string) (int, error) {
 	sum := 0
+	var wg sync.WaitGroup
+	results := make(chan bool)
+
 	for _, line := range lines {
 		splitLine := strings.Split(line, " ")
-		left, right := splitLine[0], splitLine[1]
-		arrangements := aoc.MapInt(strings.Split(right, ","))
-		for i := 0; i < len(left); i++ {
-			if left[i] == '?' {
-				newStr := left[:i] + "#"
-				if i+1 <= len(left) {
-					newStr += left[i+1:]
-				}
-				fmt.Printf("neStr: %v\n", newStr)
-				if isValidArrangement(newStr, arrangements) {
-					sum++
-				}
+		arrangements := aoc.MapInt(strings.Split(splitLine[1], ","))
+
+		stack := Stack{}
+		stack.push(splitLine[0])
+		for !stack.empty() {
+			springs := stack.pop()
+			if strings.Contains(springs, "?") {
+				stack.push(strings.Replace(springs, "?", ".", 1))
+				stack.push(strings.Replace(springs, "?", "#", 1))
+				continue
 			}
+
+			wg.Add(1)
+			go func(s string) {
+				defer wg.Done()
+				if isValidArrangement(s, arrangements) {
+					results <- true
+				} else {
+					results <- false
+				}
+			}(springs)
 		}
 	}
+
+	// Close the results channel when all goroutines are done.
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	// Collect results
+	for result := range results {
+		if result {
+			sum++
+		}
+	}
+
 	return sum, nil
 }
 
 func p2ProcessLines(lines []string) (int, error) {
-	return 0, nil
+	// expanding the input, we'll hook back into P1
+	const RepeatCount = 5
+	newLines := []string{}
+	for _, line := range lines {
+		splitLine := strings.Split(line, " ")
+
+		// Repeat the left and right parts of the line
+		newLeft := strings.TrimRight(strings.Repeat(splitLine[0]+"?", RepeatCount), "?")
+		newRight := strings.TrimRight(strings.Repeat(splitLine[1]+",", RepeatCount), ",")
+
+		newLines = append(newLines, newLeft+" "+newRight)
+	}
+
+	fmt.Printf("%v\n", newLines)
+
+	return p1ProcessLines(newLines)
 }
 
 func main() {
-	lines := aoc.ReadLines("./2023/12/input.txt")
+	lines := aoc.ReadLines("./input.txt")
 
 	sum, err := p1ProcessLines(lines)
 	if err != nil {
