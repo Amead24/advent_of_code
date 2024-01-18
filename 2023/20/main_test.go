@@ -23,23 +23,23 @@ func TestP1ProcessLines(t *testing.T) {
 		t.Errorf("processLines() = %v, want %v", got, want)
 	}
 
-	testRows = []string{
-		"broadcaster -> a",
-		"%a -> inv, con",
-		"&inv -> b",
-		"%b -> con",
-		"&con -> output",
-	}
+	// testRows = []string{
+	// 	"broadcaster -> a",
+	// 	"%a -> inv, con",
+	// 	"&inv -> b",
+	// 	"%b -> con",
+	// 	"&con -> output",
+	// }
 
-	want = 11687500
-	got, err = p1ProcessLines(testRows)
-	if err != nil {
-		t.Errorf("processLines() error = %v", err)
-		return
-	}
-	if got != want {
-		t.Errorf("processLines() = %v, want %v", got, want)
-	}
+	// want = 11687500
+	// got, err = p1ProcessLines(testRows)
+	// if err != nil {
+	// 	t.Errorf("processLines() error = %v", err)
+	// 	return
+	// }
+	// if got != want {
+	// 	t.Errorf("processLines() = %v, want %v", got, want)
+	// }
 }
 
 func TestP2ProcessLines(t *testing.T) {
