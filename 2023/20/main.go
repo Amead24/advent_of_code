@@ -8,107 +8,96 @@ import (
 )
 
 type Module struct {
-	currentPulse string
-	state        string
-	destination  string
-	modType      string
+	Name         string
+	Type         string // "flipflop" or "conjunction"
+	State        string // "on", "off", or specific state for conjunction modules
+	Destinations []string
+	InputStates  map[string]string // Only for conjunction modules to track inputs
 }
 
-func processModule(modules map[string]Module, module Module, lowPulse, highPulse *int) (Module, error) {
-	switch module.modType {
+func processModule(module *Module, pulse string, lowPulses, highPulses *int) (string, []string) {
+	switch module.Type {
 	case "flipflop":
-		if module.currentPulse == "low" {
-			if module.state == "off" {
-				*highPulse++
-				return Module{"high", "on", modules[module.destination].destination, modules[module.destination].modType}, nil
+		if pulse == "low" {
+			if module.State == "off" {
+				*highPulses++
+				module.State = "on"
+				return "high", module.Destinations
 			} else {
-				*lowPulse++
-				return Module{"low", "off", modules[module.destination].destination, modules[module.destination].modType}, nil
+				*lowPulses++
+				module.State = "off"
+				return "low", module.Destinations
 			}
 		}
-		// else if a high pulse ignore it
+		// High pulse is ignored for flip-flop
+		return "", nil
 
 	case "conjunction":
-		flip := module.currentPulse
-		if flip == "low" {
-			flip = "high"
-			*highPulse++
-		} else {
-			flip = "low"
-			*lowPulse++
+		// Update the state for the incoming pulse
+		module.InputStates[module.Name] = pulse
+
+		// Check if all inputs are high
+		allHigh := true
+		for _, inputState := range module.InputStates {
+			if inputState != "high" {
+				allHigh = false
+				break
+			}
 		}
 
-		return Module{flip, "na", modules[module.destination].destination, modules[module.destination].modType}, nil
+		if allHigh {
+			*lowPulses++
+			return "low", module.Destinations
+		} else {
+			*highPulses++
+			return "high", module.Destinations
+		}
 	}
-
-	return Module{}, fmt.Errorf("unhandled module type: %s", module.modType)
+	return "", nil
 }
 
 func p1ProcessLines(lines []string) (int, error) {
-	broadcast := []string{}
-	modules := map[string]Module{}
+	// start lowPulse as 1 for the initial button click
+	lowPulses, highPulses := 1, 0
 
+	modules := make(map[string]*Module)
 	for _, line := range lines {
-		if strings.HasPrefix(line, "broadcaster") {
-			broadcast = strings.Split(line, " -> ")
-		} else if strings.HasPrefix(line, "%") {
-			split := strings.Split(line, " -> ")
-			modules[strings.TrimLeft(split[0], "%")] = Module{"low", "off", strings.TrimSpace(split[1]), "flipflop"}
-		} else if strings.HasPrefix(line, "&") {
-			split := strings.Split(line, " -> ")
-			modules[strings.TrimLeft(split[0], "&")] = Module{"low", "off", strings.TrimSpace(split[1]), "conjunction"}
+		splitLine := strings.Split(line, " -> ")
+		left, right := splitLine[0], splitLine[1]
+		if strings.HasPrefix(left, "%") {
+			modules[left[1:]] = &Module{left[1:], "flipflop", "off", aoc.Map(strings.Split(right, ","), strings.TrimSpace), map[string]string{}}
+		} else if strings.HasPrefix(left, "%") {
+			modules[left[1:]] = &Module{left[1:], "conjunction", "n/a", aoc.Map(strings.Split(right, ","), strings.TrimSpace), map[string]string{}}
+		} else {
+			modules["broadcaster"] = &Module{"broadcaster", "flipflop", "off", aoc.Map(strings.Split(right, ","), strings.TrimSpace), map[string]string{}}
 		}
 	}
 
-	lowPulse, highPulse := 0, 0
+	// using a stack with lists in reverse feels like it's similiar to the recursive approach?
+	// that is, it should solve the first node in the destinations
+	// all the way before moving on to the second destinations
+	// aka depth-first traversal
+	stack := aoc.Stack[string]{}
+	stack.Push("broadcaster")
+	pulseToSend, destinations := processModule(modules["broadcaster"], "low", &lowPulses, &highPulses)
+	for !stack.Empty() {
+		currentModuleName := stack.Pop()
+		currentModule := modules[currentModuleName]
+		fmt.Printf("%s -", currentModuleName)
 
-	// stack := aoc.Stack{}
-	// // todo: create stack based on the broadcast list
+		// Only push destinations onto the stack if a valid pulse is returned
+		if pulseToSend != "" {
+			for _, dest := range destinations {
+				stack.Push(dest)
+			}
+		}
 
-	// for !stack.empty() {
-	// 	module := stack.pop()
-	// 	todo: stack.push([processModule(module.desintations[::-1]]))
+		pulseToSend, destinations = processModule(currentModule, pulseToSend, &lowPulses, &highPulses)
+		fmt.Printf("%s-> %v\n", pulseToSend, destinations)
+		fmt.Printf("Stack: %v\n", stack)
+	}
 
-	// 	todo: processModule(module)
-	// }
-
-	// for _, node := range strings.Split(broadcast[1], ",") {
-	// 	// queue := []Module{}
-
-	// 	bcModule := Module{"low", "off", strings.TrimSpace(node), "flipflop"}
-	// 	lowPulse++
-
-	// 	// split destination
-	// 	stack := []Module{}
-	// 	for !stack {
-	// 	}
-
-	// 	// take the first off the queue (queue[0]) and then append the result to the end (queue[len(queue) - 1])
-	// 	for {
-
-	// 		fmt.Printf("Incoming: %v -> ", module)
-	// 		newModule, err := processModule(modules, bcModule, &lowPulse, &highPulse)
-	// 		if err != nil {
-	// 			break
-	// 		}
-	// 		fmt.Printf("%v\n", newModule)
-	// 	}
-
-	// 	// for len(queue) != 0 {
-	// 	// 	module := queue[0]
-	// 	// 	queue = queue[1:]
-	// 	// 	newModule, err := processModule(modules, module, &lowPulse, &highPulse)
-	// 	// 	if err == nil {
-	// 	// 		queue = append(queue, newModule)
-	// 	// 	}
-	// 	// 	fmt.Printf("%v\n", newModule)
-
-	// 	// 	fmt.Printf("LP: %d, HP: %d\n", lowPulse, highPulse)
-	// 	// }
-
-	// }
-
-	return lowPulse * 1000 * highPulse * 1000, nil
+	return lowPulses * 1000 * highPulses * 1000, nil
 }
 
 func p2ProcessLines(lines []string) (int, error) {
@@ -116,7 +105,7 @@ func p2ProcessLines(lines []string) (int, error) {
 }
 
 func main() {
-	lines := aoc.ReadLines("")
+	lines := aoc.ReadLines("./input.txt")
 
 	sum, err := p1ProcessLines(lines)
 	if err != nil {

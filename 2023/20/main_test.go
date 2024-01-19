@@ -4,6 +4,12 @@ import (
 	"testing"
 )
 
+// func TestProcessModule(t *testing.T) {
+// 	modules := map[string]Module{}
+// 	modules["foo"] = Module{state: "off", desintations: "bar", modType: "flipflop", incomingPulse: "empty"}
+// 	modules["bar"] = Module{state: "off", destinations: "inv", modType: "flipflop", incomingPulse: "empty"}
+// }
+
 func TestP1ProcessLines(t *testing.T) {
 	testRows := []string{
 		"broadcaster -> a, b, c",
