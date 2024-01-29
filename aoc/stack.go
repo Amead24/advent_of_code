@@ -22,3 +22,7 @@ func (s *Stack[T]) Push(item T) {
 func (s *Stack[T]) Empty() bool {
 	return len(s.items) == 0
 }
+
+func (s *Stack[T]) Peek() T {
+	return s.items[len(s.items)-1]
+}
