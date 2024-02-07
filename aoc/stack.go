@@ -1,6 +1,6 @@
 package aoc
 
-type Stack[T any] struct {
+type Stack[T comparable] struct {
 	items []T
 }
 
@@ -25,4 +25,13 @@ func (s *Stack[T]) Empty() bool {
 
 func (s *Stack[T]) Peek() T {
 	return s.items[len(s.items)-1]
+}
+
+func (s *Stack[T]) Contains(item T) bool {
+	for _, value := range s.items {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }

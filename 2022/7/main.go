@@ -10,94 +10,148 @@ import (
 	"github.com/amead24/advent_of_code/aoc"
 )
 
-func p1ProcessLines(lines []string) (int, error) {
-	sizes := map[string]int{}
-	stack := aoc.Stack[string]{}
-	stack.Push("/")
+type Directory struct {
+	name    string
+	size    int
+	subdirs map[string]*Directory
+	parent  *Directory
+}
 
-	neighbors := map[string][]string{}
+func createStructure(lines []string) *Directory {
+	root := &Directory{"/", 0, nil, nil}
+	cwd := root
 
-	for _, line := range lines {
+	reChangeDirectory := regexp.MustCompile(`\$ cd (.*)$`)
+
+	for _, line := range lines[1:] { // skipping the `cd /` as it's handled at root
 		if line == "$ cd .." {
-			stack.Pop()
+			cwd = cwd.parent
 		} else if strings.HasPrefix(line, "$ cd") {
-			reChangeDirectory := regexp.MustCompile(`\$ cd (.*)$`)
 			directory := reChangeDirectory.FindStringSubmatch(line)
 			if len(directory) != 2 {
 				log.Fatalf("length mismsatch, %s => %v\n", line, directory)
 			}
 
-			stack.Push(directory[1])
-		} else { // the output of an ls command
-			cwd := stack.Peek()
+			nextDir, exists := cwd.subdirs[directory[1]]
+			if !exists { // i'm thinking this is impossible given the input
+				log.Fatalf("Failed to find %v\n", directory[1])
+			}
+
+			cwd = nextDir
+		} else { // `ls` or the output of `ls`
 			splitLine := strings.Split(line, " ")
-			if !strings.HasPrefix(line, "dir") {
-				size, _ := strconv.Atoi(splitLine[0])
-				sizes[cwd] += size
+			if !strings.HasPrefix(line, "dir") && !strings.HasPrefix(line, "$ ls") {
+				size, err := strconv.Atoi(splitLine[0])
+				if err != nil {
+					log.Fatalf("error converting size: %v\n", err)
+				}
+
+				cwd.size += size
+			} else if line != "$ ls" {
+				if cwd.subdirs == nil {
+					cwd.subdirs = make(map[string]*Directory)
+				}
+
+				cwd.subdirs[splitLine[1]] = &Directory{
+					name:    splitLine[1],
+					size:    0,
+					subdirs: make(map[string]*Directory),
+					parent:  cwd,
+				}
 			} else {
-				neighbors[cwd] = append(neighbors[cwd], splitLine[1])
+				continue
 			}
 		}
 	}
 
-	fmt.Printf("Sizes: %v\n", sizes)
-	fmt.Printf("Neighbors: %v\n", neighbors)
-	fmt.Printf("Stack: %v\n", stack)
+	return root
+}
 
-	seen := map[string]bool{}
-	stack = aoc.Stack[string]{}
-	stack.Push("/")
+func aggregateSizes(dir *Directory) int {
+	totalSize := dir.size
+	for _, subdir := range dir.subdirs {
+		totalSize += aggregateSizes(subdir)
+	}
+
+	dir.size = totalSize
+
+	// if dir.size <= 100_000 {
+	// 	*sum += dir.size
+	// }
+
+	return totalSize
+}
+
+func p1ProcessLines(lines []string) (int, error) {
+	root := createStructure(lines)
+	aggregateSizes(root)
+
+	stack := aoc.Stack[*Directory]{}
+	stack.Push(root)
 
 	sum := 0
-	// for i := 0; i < 3; i++ {
+	seen := make(map[*Directory]bool)
 	for !stack.Empty() {
-		cwd := stack.Peek()
-		fmt.Printf("cwd: %s and stack: %v\n", cwd, stack)
-		if dirs, hasNeighbors := neighbors[cwd]; !hasNeighbors { // is an edge node
-			seen[cwd] = true
-			if sizes[cwd] <= 100_000 {
-				sum += sizes[cwd]
-			}
-			stack.Pop()
-		} else {
-			cwdTotal := sizes[cwd] // this is the total of any non-dirs found already
-			seenAllNeighbors := true
+		cwd := stack.Pop()
+		if seen[cwd] {
+			continue
+		}
+		seen[cwd] = true
 
-			// see if all the neighbors have been visited
-			for _, dir := range dirs {
-				if !seen[dir] {
+		if cwd.size < 100000 {
+			sum += cwd.size
+		}
 
-					// TODO - Implement `Stack.Contains(dir)`
-					// to check for the possibility of infinite loops
-					seenAllNeighbors = false
-					stack.Push(dir)
-					break
-				} else {
-					cwdTotal += sizes[dir]
-				}
-			}
-
-			if seenAllNeighbors {
-				// then it's okay to add this to the cwd size
-				seen[cwd] = true
-
-				sizes[cwd] = cwdTotal
-				if sizes[cwd] <= 100_000 {
-					sum += sizes[cwd]
-				}
-
-				stack.Pop()
+		for _, dir := range cwd.subdirs {
+			if !seen[dir] {
+				stack.Push(dir)
 			}
 		}
 	}
 
+	// 1749646
 	// 1340491 - to low
 	// 1280098
 	return sum, nil
 }
 
 func p2ProcessLines(lines []string) (int, error) {
-	return 0, nil
+	root := createStructure(lines)
+
+	totalUsedSpace := aggregateSizes(root)
+	totalUnusedSpace := 70_000_000 - totalUsedSpace
+	requiredForUpdate := 30_000_000 - totalUnusedSpace
+	if requiredForUpdate <= 0 {
+		log.Fatalf("Required space already found...")
+	}
+
+	stack := aoc.Stack[*Directory]{}
+	stack.Push(root)
+
+	seen := make(map[*Directory]bool)
+
+	smallestPossibleFolder := root
+	for !stack.Empty() {
+		cwd := stack.Pop()
+		if seen[cwd] {
+			continue
+		}
+		seen[cwd] = true
+
+		if cwd.size >= requiredForUpdate && cwd.size <= smallestPossibleFolder.size {
+			// fmt.Printf("setting smallest folder too: %v\n", smallestPossibleFolder)
+			smallestPossibleFolder = cwd
+		}
+
+		for _, dir := range cwd.subdirs {
+			if !seen[dir] {
+				stack.Push(dir)
+			}
+		}
+	}
+
+	// 33688513 -- too high
+	return smallestPossibleFolder.size, nil
 }
 
 func main() {
