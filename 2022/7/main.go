@@ -151,6 +151,7 @@ func p2ProcessLines(lines []string) (int, error) {
 	}
 
 	// 33688513 -- too high
+	// 1498966
 	return smallestPossibleFolder.size, nil
 }
 

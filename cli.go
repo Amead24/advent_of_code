@@ -38,7 +38,7 @@ func main() {
 	}
 
 	// Create directory path
-	dirPath := fmt.Sprintf("%d/%d", *year, *day)
+	dirPath := fmt.Sprintf("%d/%02d", *year, *day)
 	err := os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		log.Fatal("Error creating directory:", err)
