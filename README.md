@@ -15,4 +15,5 @@ Making use of [this gha](https://github.com/k2bd/advent-readme-stars) to automat
 | :---: | :---: | :---: |
 | [Day 1](https://adventofcode.com/2024/day/1) | ⭐ | ⭐ |
 | [Day 2](https://adventofcode.com/2024/day/2) | ⭐ | ⭐ |
+| [Day 3](https://adventofcode.com/2024/day/3) | ⭐ | ⭐ |
 <!--- advent_readme_stars table --->
